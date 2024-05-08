@@ -2,53 +2,75 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Enemy : MonoBehaviour
+namespace SanBlasVR
 {
-    public float speed;
-    public float followDistance;
-    public float attackDistance;
-    private Transform target;
-    private Animator animator;
-    private AudioSource audioSource;
-    
-    void Start()
+    public class Enemy : MonoBehaviour
     {
-        animator = GetComponentInChildren<Animator>();
-        audioSource = GetComponentInChildren<AudioSource>();
-        target = GameObject.FindGameObjectWithTag("MainCamera").transform;
-    }
+        public float speed;
+        public float followDistance;
+        public float attackDistance;
+        private Transform target;
+        private Animator animator;
+        private AudioSource audioSource;
 
-    // Update is called once per frame
-    void Update()
-    {
-        transform.LookAt(new Vector3(target.position.x, transform.position.y, target.position.z));
-        Physics.Raycast(transform.position, target.position-transform.position, out RaycastHit hitInfo);
-        if (hitInfo.transform.name!="Main Camera")
+        void Start()
         {
-            animator.SetBool("Attacking",false);
-            animator.SetBool("Walking",false);
-        } else {
-            MoveEnemy();
+            animator = GetComponentInChildren<Animator>();
+            audioSource = GetComponentInChildren<AudioSource>();
+            target = GameObject.FindGameObjectWithTag("MainCamera").transform;
         }
-    }
-    private void MoveEnemy()
-    {
-        if (Vector3.Distance(target.position, transform.position) < attackDistance){
-            animator.SetBool("Attacking",true);
-            animator.SetBool("Walking",false);
-            if (!audioSource.isPlaying){
+
+        // Update is called once per frame
+        void Update()
+        {
+            transform.LookAt(new Vector3(target.position.x, transform.position.y, target.position.z));
+            Physics.Raycast(transform.position, target.position - transform.position, out RaycastHit hitInfo);
+            if (hitInfo.transform.name != "Main Camera")
+            {
+                animator.SetBool("Attacking", false);
+                animator.SetBool("Walking", false);
+            }
+            else
+            {
+                MoveEnemy();
+            }
+        }
+        private void MoveEnemy()
+        {
+            if (Vector3.Distance(target.position, transform.position) < attackDistance)
+            {
+                Attack();
+            }
+            else if (Vector3.Distance(target.position, transform.position) < followDistance)
+            {
+                Move();
+            }
+            else
+            {
+                Stop();
+            }
+        }
+        private void Attack()
+        {
+            animator.SetBool("Attacking", true);
+            animator.SetBool("Walking", false);
+            if (!audioSource.isPlaying)
+            {
                 audioSource.Play();
             }
-        } else if (Vector3.Distance(target.position, transform.position) < followDistance)
+        }
+        private void Move()
         {
-            animator.SetBool("Attacking",false);
-            animator.SetBool("Walking",true);
+            audioSource.Stop();
+            animator.SetBool("Attacking", false);
+            animator.SetBool("Walking", true);
             transform.Translate(Vector3.forward * speed * Time.deltaTime);
-        } 
-        else 
+        }
+        private void Stop()
         {
-            animator.SetBool("Attacking",false);
-            animator.SetBool("Walking",false);
+            audioSource.Stop();
+            animator.SetBool("Attacking", false);
+            animator.SetBool("Walking", false);
         }
     }
 }
